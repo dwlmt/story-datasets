@@ -46,7 +46,7 @@ _DESCRIPTION = """\
  Each story is a creative writing exercise following a prompt.
 """
 
-_VERSION = "1.0.0"
+_VERSION = datasets.Version("1.0.0")
 
 _URL = "https://github.com/dwlmt/story-datasets/raw/main/WritingPrompts/WritingPrompts.tar.gz"
 
@@ -79,10 +79,11 @@ class WritingPromptsDataset(datasets.GeneratorBasedBuilder):
 
     BUILDER_CONFIG_CLASS = WritingPromptsDatasetConfig
     BUILDER_CONFIGS = [
-        WritingPromptsDatasetConfig(name="writing_prompts_sentence", description="Writing Prompts split by sentence."),
+        WritingPromptsDatasetConfig(name="writing_prompts_sentence", description="Writing Prompts split by sentence.",
+                                    version=_VERSION),
         WritingPromptsDatasetConfig(name="writing_prompts_passage",
                                     description="Writing Prompts split by passages of 4 sentences.",
-                                    sentences_per_passage_num=4)
+                                    sentences_per_passage_num=4, version=_VERSION)
     ]
 
     def _info(self):
