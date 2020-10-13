@@ -45,3 +45,12 @@ work with downstream. The format of each json line:
 
 Additionally the _\<newline>_  from the original dataset has been replaced by _\n_. 
 
+## Huggingface Datasets
+
+**./hugging_face_dataset.py** contains a [Huggingface datasets](https://github.com/huggingface/datasets) script to read stories with one story per training set
+example and stories broken down into sentences or longer passages nested under "passages" in the example
+dictionary. Please see dataset.features in the script for the format.
+
+The sentences are split using [BlingFire](https://github.com/microsoft/BlingFire). Either single sentences or passages
+grouped by 4 sentence blocks are available as configurations.
+
