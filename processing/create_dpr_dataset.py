@@ -56,7 +56,7 @@ class ProcessDPRDataset(object):
 
             for example in output_json_list:
                 print(f"Create vector for text: {example['id']} - {example['text']}")
-                vectors.append(ctx_encoder(**ctx_tokenizer(example["text"], return_tensors="pt"))[0][0].numpy())
+                vectors.append(ctx_encoder(**ctx_tokenizer(example["text"],  truncation=True, return_tensors="pt"))[0][0].numpy())
 
         vectors = numpy.stack(vectors)
 
