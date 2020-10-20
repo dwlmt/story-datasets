@@ -51,7 +51,7 @@ class WikiPlotsDatasetConfig(datasets.BuilderConfig):
         super(WikiPlotsDatasetConfig, self).__init__(**kwargs)
 
 
-class WikiPlotsDatasetConfig(datasets.GeneratorBasedBuilder):
+class WikiPlotsDataset(datasets.GeneratorBasedBuilder):
     """English language plots taken from the English Wikipedia from films, books, plays and other narrative forms. The dataset
  has 132,358 plots in total.
 
