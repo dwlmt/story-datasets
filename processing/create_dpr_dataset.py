@@ -50,11 +50,12 @@ class ProcessDPRDataset(object):
         ctx_encoder = DPRContextEncoder.from_pretrained(rag_context_encoder)
         ctx_tokenizer = DPRContextEncoderTokenizer.from_pretrained("facebook/dpr-ctx_encoder-single-nq-base")
 
+        with jsonlines.open(f'{base_output_file}.jsonl', mode='w') as writer:
+            for output in output_json_list:
+                writer.write(output)
+
         if torch.cuda.is_available():
             ctx_encoder = ctx_encoder.cuda()
-
-        with jsonlines.open(f'{base_output_file}.jsonl', mode='w') as writer:
-            writer.write(output_json_list)
 
         vectors = []
         with torch.no_grad():
