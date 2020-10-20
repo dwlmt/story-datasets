@@ -5,6 +5,7 @@ import more_itertools
 import numpy
 import torch
 from jsonlines import jsonlines
+from tqdm import tqdm
 from transformers import DPRContextEncoder, DPRContextEncoderTokenizer
 
 try:
@@ -15,7 +16,8 @@ except ImportError:
 
 class ProcessDPRDataset(object):
 
-    def create(self, datasets: List[str], base_output_file, window_size: int = 4, window_step=2,
+    def create(self, datasets: List[str], base_output_file, window_size: int = 4, window_step=2, max_length=512,
+               batch_size=8,
                rag_context_encoder="facebook/dpr-ctx_encoder-multiset-base"):
 
         if isinstance(datasets, str):
@@ -48,17 +50,53 @@ class ProcessDPRDataset(object):
         ctx_encoder = DPRContextEncoder.from_pretrained(rag_context_encoder)
         ctx_tokenizer = DPRContextEncoderTokenizer.from_pretrained("facebook/dpr-ctx_encoder-single-nq-base")
 
+        if torch.cuda.is_available():
+            ctx_encoder = ctx_encoder.cuda()
+
         with jsonlines.open(f'{base_output_file}.jsonl', mode='w') as writer:
             writer.write(output_json_list)
 
         vectors = []
         with torch.no_grad():
 
-            for example in output_json_list:
-                print(f"Create vector for text: {example['id']} - {example['text']}")
-                vectors.append(ctx_encoder(**ctx_tokenizer(example["text"],  truncation=True, return_tensors="pt"))[0][0].numpy())
+            def encode_vector_batch(batch_list):
 
-        vectors = numpy.stack(vectors)
+                tokens = ctx_tokenizer(batch_list, truncation=True, padding="longest", max_length=max_length,
+                                       return_tensors="pt")
+
+                if torch.cuda.is_available():
+
+                    for key in tokens.keys():
+                        tokens[key] = tokens[key].cuda()
+
+                vector = ctx_encoder(
+                    **tokens)[0]
+
+                if len(vector.size()) == 1:
+                    vector = vector.unsqueeze(dim=0)
+
+                vector = vector.cpu().numpy()
+
+                return vector
+
+            print(f"Encoding vectors, total {len(output_json_list)}")
+
+            batch_list = []
+            examples = tqdm(output_json_list)
+            for example in examples:
+
+                batch_list.append(example['text'])
+
+                if len(batch_list) == batch_size:
+                    # examples.set_description(f"Encoding batch: {batch_list}")
+                    vectors.append(encode_vector_batch(batch_list))
+
+                    batch_list = []
+
+            if len(batch_list) > 0:
+                vectors.append(encode_vector_batch(batch_list))
+
+        vectors = numpy.concatenate(vectors, axis=0)
 
         print("Vector shape: ", vectors.shape)
 
