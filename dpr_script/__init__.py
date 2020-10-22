@@ -1,0 +1,2 @@
+from dpr_script.huggingface_dpr_dataset import StoryDprDataset
+from dpr_script.huggingface_dpr_dataset import StoryDprDatasetConfig
