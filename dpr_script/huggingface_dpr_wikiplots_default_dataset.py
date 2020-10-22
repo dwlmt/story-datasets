@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Huggingface datasets script file for reading a DPR dataset and initialising a Faiss index """
+
 from __future__ import absolute_import, division, print_function
 
 import logging
@@ -55,42 +55,30 @@ _DESCRIPTION = """\
 _VERSION = datasets.Version("1.0.0")
 
 
-class StoryDprDatasetConfig(datasets.BuilderConfig):
+class StoryDprWikiDefaultDatasetConfig(datasets.BuilderConfig):
     """ BuilderConfig for DPR Datasets"""
 
     def __init__(self,
-                 name,
-                 dataset_name,
-                 data_url: str,
-                 data_num_bytes: int,
-                 data_checksum: str,
-                 vectors_url: str = None,
-                 vectors_num_bytes: int = None,
-                 vectors_checksum: str = None,
-                 with_index: bool = True,
+                 name="wikiplots_dpr_window_4_step_2_embeddings_index_compressed",
+                 dataset_name="wikiplots",
+                 data_url="https://github.com/dwlmt/story-datasets/raw/main/WikiPlots/wikiplots_20200701_dpr_window_4_step_2.jsonl.gz",
+                 data_num_bytes=130341879,
+                 data_checksum="7c0e119679473e609585ca8019b2d4add0b0184fe74a74e87b3ccfb1967dc771",
+                 vectors_url="https://drive.google.com/uc?export=download&id=10g8zH0mOBLS_tN2TD9thrl2RLRpkONjh",
+                 vectors_num_bytes=2996591652,
+                 vectors_checksum="8968c448ae73a9432b9c015cfd500047b710c0996081b25efe1424189c1fc1b0",
+                 description="Wikiplots dataset with DPR vectors from the multiset configuration.",
+                 with_embeddings=True,
+                 with_index=True,
                  index_name: str = "compressed",
-                 with_embeddings: bool = True,
                  embedding_dim: int = 768,
                  train_size: int = 250000,
                  index_worlds: int = 32,
                  index_ncentroids=4096,
                  index_code_size=64,
-                 dummy: bool = False, **kwargs):
-        """
-        Args:
-            dataset_name (str): Overall name for the dataset, e.g. Wikiplots or WritingPrompts.
-            data_url (str): The URL for the jsonl dataset file.
-            vectors_url (str): URL for the vectors files compressed in npz format.
-            with_index (bool): Whether to create a Faiss index.
-            index_name (str): Compressed or exact index, as per wiki_dpr.
-            with_embeddings (bool): Whether to return the embeddings as part of the dataset.
-            embedding_dim (int): The dimension of the loaded embeddings.
-            data_num_bytes (int): Number of bytes in the data file.
-            data_checksum (str): sha256 checksum for the data file.
-            vectors_num_bytes (int): Number of bytes in the data file.
-            vectors_checksum (str): sha256 checksum for the data file.
-            dummy (bool): Only load the first 10000 records rather than the whole file.
-        """
+                 dummy: bool = False,
+                 **kwargs):
+
         self.dataset_name = dataset_name
         self.data_url = data_url
         self.vectors_url = vectors_url
@@ -113,54 +101,18 @@ class StoryDprDatasetConfig(datasets.BuilderConfig):
         if self.dummy:
             self.index_file = "dummy." + self.index_file
 
-        super(StoryDprDatasetConfig, self).__init__(name=name, **kwargs)
+        if self.dummy:
+            self.index_file = "dummy." + self.index_file
+
+        super(StoryDprWikiDefaultDatasetConfig, self).__init__(name=name, description=description,
+                                                               **kwargs)
 
 
-class StoryDprDataset(datasets.GeneratorBasedBuilder):
+class StoryWikiDefaultDprDataset(datasets.GeneratorBasedBuilder):
     """
-     Datasets script for reading datasets prepared for DPR and adding a Faiss index.
-     The format for all the datasets read here is a jsonl file with a separate numpy vector file saved in npz format.
-     The code for this is adapted from the https://huggingface.co/datasets/wiki_dpr dataset.
-
+     Default Wiki version of the dataset with the compressed index.
     """
-    BUILDER_CONFIG_CLASS = StoryDprDatasetConfig
-    BUILDER_CONFIGS = [
-        StoryDprDatasetConfig(name="wikiplots_dpr_window_4_step_2",
-                              dataset_name="wikiplots",
-                              data_url="https://github.com/dwlmt/story-datasets/raw/main/WikiPlots/wikiplots_20200701_dpr_window_4_step_2.jsonl.gz",
-                              data_num_bytes=130341879,
-                              data_checksum="7c0e119679473e609585ca8019b2d4add0b0184fe74a74e87b3ccfb1967dc771",
-                              description="Wikiplots with no index or embeddings.",
-                              with_embeddings=False,
-                              with_index=False,
-                              version=_VERSION),
-        StoryDprDatasetConfig(name="wikiplots_dpr_window_4_step_2_embeddings_index_compressed",
-                              dataset_name="wikiplots",
-                              data_url="https://github.com/dwlmt/story-datasets/raw/main/WikiPlots/wikiplots_20200701_dpr_window_4_step_2.jsonl.gz",
-                              data_num_bytes=130341879,
-                              data_checksum="7c0e119679473e609585ca8019b2d4add0b0184fe74a74e87b3ccfb1967dc771",
-                              vectors_url="https://drive.google.com/uc?export=download&id=10g8zH0mOBLS_tN2TD9thrl2RLRpkONjh",
-                              vectors_num_bytes=2996591652,
-                              vectors_checksum="8968c448ae73a9432b9c015cfd500047b710c0996081b25efe1424189c1fc1b0",
-                              description="Wikiplots dataset with DPR vectors from the multiset configuration.",
-                              with_embeddings=True,
-                              with_index=True,
-                              version=_VERSION),
-        StoryDprDatasetConfig(name="wikiplots_dpr_window_4_step_2_embeddings_dummy_exact",
-                              dataset_name="wikiplots",
-                              data_url="https://github.com/dwlmt/story-datasets/raw/main/WikiPlots/wikiplots_20200701_dpr_window_4_step_2.jsonl.gz",
-                              data_num_bytes=130341879,
-                              data_checksum="7c0e119679473e609585ca8019b2d4add0b0184fe74a74e87b3ccfb1967dc771",
-                              vectors_url="https://drive.google.com/uc?export=download&id=10g8zH0mOBLS_tN2TD9thrl2RLRpkONjh",
-                              vectors_num_bytes=2996591652,
-                              vectors_checksum="8968c448ae73a9432b9c015cfd500047b710c0996081b25efe1424189c1fc1b0",
-                              description="Wikiplots dataset dummy setup which is only the first 10000 examples.",
-                              with_embeddings=True,
-                              with_index=True,
-                              dummy=True,
-                              index_name="exact",
-                              version=_VERSION)
-    ]
+    BUILDER_CONFIG_CLASS = StoryDprWikiDefaultDatasetConfig
 
     def _info(self):
 
@@ -234,7 +186,7 @@ class StoryDprDataset(datasets.GeneratorBasedBuilder):
                         # Reshape if the array has been expanded to a dim of 3.
                         if len(vecs.shape) == 3:
                             vecs = numpy.squeeze(vecs, axis=0)
-                        print(vecs.shape)
+                      
                         vec_idx = 0
                         vec = vecs[vec_idx]
                     yield id, {"id": id, "text": text, "title": title, "embeddings": vec}
