@@ -77,6 +77,7 @@ class StoryDprWikiDefaultDatasetConfig(datasets.BuilderConfig):
                  index_ncentroids=4096,
                  index_code_size=64,
                  dummy: bool = False,
+                 version=_VERSION,
                  **kwargs):
 
         self.dataset_name = dataset_name
@@ -104,7 +105,9 @@ class StoryDprWikiDefaultDatasetConfig(datasets.BuilderConfig):
         if self.dummy:
             self.index_file = "dummy." + self.index_file
 
-        super(StoryDprWikiDefaultDatasetConfig, self).__init__(name=name, description=description,
+        super(StoryDprWikiDefaultDatasetConfig, self).__init__(name=name,
+                                                               description=description,
+                                                               version=version,
                                                                **kwargs)
 
 
