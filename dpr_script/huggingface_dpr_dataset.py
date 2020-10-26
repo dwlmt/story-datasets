@@ -193,7 +193,7 @@ class StoryDprDataset(datasets.GeneratorBasedBuilder):
 
     def _post_processing_resources(self, split):
         if self.config.with_index:
-            return {"embeddings_index": self.config.index_file.format(split=split)}
+            return {"embeddings_index": self.config.index_file}
         else:
             return {}
 
@@ -251,7 +251,7 @@ class StoryDprDataset(datasets.GeneratorBasedBuilder):
 
             index_file = resources_paths["embeddings_index"]
 
-            if os.path.exists(index_file):
+            if index_file is not None and os.path.exists(index_file):
                 dataset.load_faiss_index("embeddings", index_file)
             else:
 
@@ -280,6 +280,6 @@ class StoryDprDataset(datasets.GeneratorBasedBuilder):
                     )
 
                 logging.info(f"Saving {self.name} faiss index")
-                dataset.save_faiss_index("embeddings", index_file)
+                #dataset.save_faiss_index("embeddings", index_file)
 
         return dataset

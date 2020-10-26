@@ -54,6 +54,11 @@ _DESCRIPTION = """\
 
 _VERSION = datasets.Version("1.0.0")
 
+_DESCRIPTION = """\
+ The WritingPrompts dataset is over 300K short stories collected from the reddit forum /r/WritingPrompts/ .
+ Each story is a creative writing exercise following a prompt.
+"""
+
 
 class StoryDprWikiDefaultDatasetConfig(datasets.BuilderConfig):
     """ BuilderConfig for DPR Datasets"""
@@ -143,14 +148,16 @@ class StoryWikiDefaultDprDataset(datasets.GeneratorBasedBuilder):
             supervised_keys=None,
             homepage=_HOMEPAGE,
             citation=_CITATION,
-            download_checksums=download_checksums
+            #download_checksums=download_checksums
         )
 
+    '''
     def _post_processing_resources(self, split):
         if self.config.with_index:
-            return {"embeddings_index": self.config.index_file.format(split=split)}
+            return {"embeddings_index": self.config.index_file}
         else:
             return {}
+    '''
 
     def _split_generators(self, dl_manager):
         files_to_download = {"data_file": self.config.data_url}
@@ -204,9 +211,9 @@ class StoryWikiDefaultDprDataset(datasets.GeneratorBasedBuilder):
     def _post_process(self, dataset, resources_paths):
         if self.config.with_index:
 
-            index_file = resources_paths["embeddings_index"]
+            index_file = None#resources_paths["embeddings_index"]
 
-            if os.path.exists(index_file):
+            if index_file is not None and os.path.exists(index_file):
                 dataset.load_faiss_index("embeddings", index_file)
             else:
 
@@ -235,6 +242,6 @@ class StoryWikiDefaultDprDataset(datasets.GeneratorBasedBuilder):
                     )
 
                 logging.info(f"Saving {self.name} faiss index")
-                dataset.save_faiss_index("embeddings", index_file)
+                #dataset.save_faiss_index("embeddings", index_file)
 
         return dataset
